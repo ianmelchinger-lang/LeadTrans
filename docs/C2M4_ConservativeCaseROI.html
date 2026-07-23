@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice: The Conservative-Case ROI Check</title>
+<style>
+  :root {
+    --ink: #1B2430;
+    --ink-soft: #4A5566;
+    --paper: #EEF1F4;
+    --card: #FFFFFF;
+    --line: #D7DCE2;
+    --line-strong: #B7C0CB;
+    --teal: #0F5C56;
+    --teal-soft: #E3EEEC;
+    --amber: #A85B12;
+    --amber-soft: #F6E9D8;
+    --green: #1F7A47;
+    --green-soft: #E4F2E9;
+    --red: #A83B3B;
+    --red-soft: #F7E7E5;
+    --focus: #1D5FD1;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+
+  header.page-head {
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+  }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.7rem;
+    line-height: 1.25;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+
+  .sub {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.25rem;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+
+  section {
+    margin-bottom: 34px;
+  }
+
+  p { margin: 0 0 12px; }
+
+  .term {
+    font-weight: 700;
+    color: var(--teal);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+
+  .card h3 {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .rowline {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.98rem;
+  }
+  .rowline:last-child { border-bottom: none; }
+  .rowline .k { color: var(--ink-soft); }
+  .rowline .v { font-weight: 600; }
+
+  .rate-badge {
+    display: inline-block;
+    background: var(--teal-soft);
+    color: var(--teal);
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+
+  .field label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  .field .hint {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 1.05rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="number"]:focus-visible,
+  button:focus-visible,
+  input[type="range"]:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  button.check-btn {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button.check-btn:hover { background: #303c4d; }
+
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--line);
+    font-size: 0.98rem;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct {
+    background: var(--green-soft);
+    border-color: var(--green);
+    color: #163f28;
+  }
+  .feedback.partial {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+    color: #5c3407;
+  }
+  .feedback.wrong {
+    background: var(--red-soft);
+    border-color: var(--red);
+    color: #5c2323;
+  }
+  .feedback strong { display: block; margin-bottom: 4px; }
+
+  /* Play zone */
+  .play-zone {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .explore-tag {
+    display: inline-block;
+    background: var(--ink);
+    color: #fff;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  .slider-row {
+    margin-bottom: 18px;
+  }
+  .slider-row .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.92rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .slider-row .slider-label .val {
+    font-weight: 700;
+    color: var(--teal);
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--teal);
+  }
+
+  .chart-wrap {
+    margin-top: 18px;
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid var(--line);
+  }
+
+  svg text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+
+  .readout {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+  }
+  .readout .label { color: var(--ink-soft); font-size: 0.9rem; }
+  .readout .num { font-size: 1.35rem; font-weight: 700; }
+  .readout .num.pos { color: var(--green); }
+  .readout .num.neg { color: var(--red); }
+
+  .note {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+
+  @media (max-width: 480px) {
+    .field-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 1.4rem; }
+    .wrap { padding: 18px 14px 48px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <h1>Does the conservative case clear breakeven?</h1>
+    <p class="sub">A CFO reads the conservative scenario first and treats everything above it as upside. Run the numbers for one process and find out whether this case survives its own toughest test.</p>
+  </header>
+
+  <section class="intro">
+    <p>Before the formula, four words worth pinning down. A <span class="term">baseline</span> is the measured, current-state cost, time, and volume of a process &mdash; pulled from real records, never guessed. <span class="term">Total cost of ownership (TCO)</span> is everything it costs to run the AI solution: not just the software price, but data preparation, integration, training, and a contingency buffer. A <span class="term">realization rate</span> is the share of the theoretical benefit that actually shows up in year one, because adoption never hits 100% on day one. And the <span class="term">conservative case</span> is the scenario built at the lowest realistic realization rate, with full costs included &mdash; it's the number the CFO trusts, because everything above it is upside, not the floor.</p>
+    <p>The formula (from the module's own worked method):</p>
+    <div class="card" style="text-align:center;">
+      <strong>ROI&nbsp;=&nbsp;(Cost&nbsp;Savings&nbsp;&minus;&nbsp;Total&nbsp;Costs)&nbsp;&divide;&nbsp;Total&nbsp;Costs&nbsp;&times;&nbsp;100</strong>
+    </div>
+    <p>The numbers below are a sample process, built to practice the method &mdash; on the job, you'd swap in your own measured baseline and your own finance team's cost figures.</p>
+  </section>
+
+  <section class="practice">
+    <h2>The process: invoice exception handling</h2>
+    <p>This is the back-office work of reviewing invoices that failed automatic matching and need a person to resolve them. Here is the measured baseline:</p>
+
+    <div class="card">
+      <h3>Measured baseline</h3>
+      <div class="rowline"><span class="k">Annual volume of exceptions</span><span class="v">12,000</span></div>
+      <div class="rowline"><span class="k">Average handling time, per exception</span><span class="v">18 minutes</span></div>
+      <div class="rowline"><span class="k">Fully burdened labor cost</span><span class="v">$42 / hour</span></div>
+      <div class="rowline"><span class="k">Full annual cost of this manual work today</span><span class="v" id="grossPotentialDisplay">$151,200</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Total cost of ownership &mdash; year one</h3>
+      <div class="rowline"><span class="k">Software &amp; licensing</span><span class="v">$18,000</span></div>
+      <div class="rowline"><span class="k">Data preparation &amp; integration</span><span class="v">$34,000</span></div>
+      <div class="rowline"><span class="k">Change management &amp; training</span><span class="v">$16,000</span></div>
+      <div class="rowline"><span class="k">Contingency</span><span class="v">$7,000</span></div>
+      <div class="rowline"><span class="k"><strong>Total costs</strong></span><span class="v"><strong>$75,000</strong></span></div>
+    </div>
+
+    <p>The module's practice placeholders set realization at <span class="rate-badge">conservative 40%</span>, base 70%, and optimistic 100%. Work the <strong>conservative case</strong>: if only 40% of the $151,200 theoretical benefit shows up this year, what are the cost savings, and what's the ROI?</p>
+
+    <div class="field-grid">
+      <div class="field">
+        <label for="csInput">Conservative cost savings ($)</label>
+        <input type="number" id="csInput" inputmode="decimal" aria-describedby="csHint">
+        <div class="hint" id="csHint">Gross potential &times; 40% realization</div>
+      </div>
+      <div class="field">
+        <label for="roiInput">Conservative ROI (%)</label>
+        <input type="number" id="roiInput" inputmode="decimal" step="0.1" aria-describedby="roiHint">
+        <div class="hint" id="roiHint">(Cost savings &minus; total costs) &divide; total costs &times; 100</div>
+      </div>
+    </div>
+
+    <button class="check-btn" id="checkBtn" type="button">Check my numbers</button>
+
+    <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="play">
+    <div class="play-zone">
+      <span class="explore-tag">Explore &mdash; nothing here is graded</span>
+      <h2>Move the levers, watch the case bend</h2>
+      <p>The line below plots ROI against realization rate, using the same formula you just worked. Pull the cost sliders and watch whether the conservative point (40%) can clear the zero line.</p>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <label for="dataPrepSlider">Data preparation &amp; integration cost</label>
+          <span class="val" id="dataPrepVal">$34,000</span>
+        </div>
+        <input type="range" id="dataPrepSlider" min="10000" max="80000" step="1000" value="34000">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <label for="changeSlider">Change management &amp; training cost</label>
+          <span class="val" id="changeVal">$16,000</span>
+        </div>
+        <input type="range" id="changeSlider" min="5000" max="60000" step="1000" value="16000">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <label for="realizationSlider">Your realization rate</label>
+          <span class="val" id="realizationVal">40%</span>
+        </div>
+        <input type="range" id="realizationSlider" min="0" max="100" step="1" value="40">
+      </div>
+
+      <div class="chart-wrap">
+        <svg id="chartSvg" viewBox="0 0 600 300" role="img" aria-label="Line chart of ROI percent against realization rate, with markers at conservative, base, and optimistic points"></svg>
+      </div>
+
+      <div class="readout">
+        <span class="label">ROI at your realization rate</span>
+        <span class="num" id="liveRoi">&minus;19.4%</span>
+      </div>
+      <p class="note">These sliders are illustrative &mdash; they let you feel how full costs and adoption speed move the case. They are not part of the checked answer above.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var GROSS = 12000 * (18 / 60) * 42; // 151200 — full annual cost of the manual work today
+  var LICENSE = 18000, CONTINGENCY = 7000;
+  var FIXED_DATAPREP = 34000, FIXED_CHANGE = 16000;
+  var FIXED_TCO = LICENSE + CONTINGENCY + FIXED_DATAPREP + FIXED_CHANGE; // 75000
+
+  var CONSERVATIVE_RATE = 0.40, BASE_RATE = 0.70, OPT_RATE = 1.00;
+
+  var csConservative = GROSS * CONSERVATIVE_RATE;
+  var csBase = GROSS * BASE_RATE;
+  var csOpt = GROSS * OPT_RATE;
+
+  function roiFor(cs, tco) { return (cs - tco) / tco * 100; }
+
+  var roiConservative = roiFor(csConservative, FIXED_TCO);
+  var roiBase = roiFor(csBase, FIXED_TCO);
+  var roiOpt = roiFor(csOpt, FIXED_TCO);
+
+  var roiLicenseOnly = roiFor(csConservative, LICENSE); // common "forgot full TCO" error
+
+  function money(n) {
+    return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  }
+
+  // ---------- Practice check ----------
+  var csInput = document.getElementById('csInput');
+  var roiInput = document.getElementById('roiInput');
+  var feedback = document.getElementById('feedback');
+
+  function setFeedback(kind, title, body) {
+    feedback.className = 'feedback show ' + kind;
+    feedback.innerHTML = '<strong>' + title + '</strong>' + body;
+  }
+
+  document.getElementById('checkBtn').addEventListener('click', function () {
+    var cs = parseFloat(csInput.value);
+    var roi = parseFloat(roiInput.value);
+
+    if (isNaN(cs) || isNaN(roi)) {
+      setFeedback('wrong', 'Enter both numbers.', 'Fill in the conservative cost savings and the conservative ROI, then check again.');
+      return;
+    }
+
+    var csOK = Math.abs(cs - csConservative) <= 1;
+    var roiOK = Math.abs(roi - roiConservative) <= 0.15;
+
+    if (csOK && roiOK) {
+      setFeedback('correct', 'That ties out.',
+        'Conservative cost savings are ' + money(csConservative) + ' (40% of the ' + money(GROSS) +
+        ' theoretical benefit), against ' + money(FIXED_TCO) + ' in full year-one costs. That gives an ROI of ' +
+        roiConservative.toFixed(1) + '%. At the conservative realization rate, this case does not clear breakeven in year one &mdash; which is exactly what the conservative anchor is supposed to reveal before the case reaches a CFO.');
+      return;
+    }
+
+    if (Math.abs(cs - csBase) <= 1) {
+      setFeedback('partial', 'Right magnitude, wrong component.',
+        'That cost-savings figure matches the base case (70% realization), not the conservative one (40%). Check which realization rate you applied to the $151,200 gross potential.');
+      return;
+    }
+
+    if (Math.abs(cs - csOpt) <= 1) {
+      setFeedback('partial', 'Right magnitude, wrong component.',
+        'That matches the full 100%-realization figure &mdash; the theoretical maximum, not the conservative case. Apply the 40% conservative rate instead.');
+      return;
+    }
+
+    if (csOK && Math.abs(roi - roiLicenseOnly) <= 1) {
+      setFeedback('partial', 'Right magnitude, wrong component.',
+        'Your cost savings figure is right, but that ROI looks like it divides by the software license alone ($18,000), not the full year-one TCO of $75,000. Add back data preparation, change management, and contingency before dividing.');
+      return;
+    }
+
+    if (csOK && !roiOK) {
+      setFeedback('wrong', 'Cost savings is right; ROI is off.',
+        'First step: subtract total costs ($75,000) from your cost savings figure, then divide by total costs, then multiply by 100.');
+      return;
+    }
+
+    setFeedback('wrong', 'Cost savings doesn\u2019t tie to the conservative case.',
+      'First step: multiply the annual baseline cost ($151,200) by the conservative realization rate (40%). Start there, then work the ROI formula.');
+  });
+
+  // ---------- Play zone ----------
+  var dataPrepSlider = document.getElementById('dataPrepSlider');
+  var changeSlider = document.getElementById('changeSlider');
+  var realizationSlider = document.getElementById('realizationSlider');
+  var dataPrepVal = document.getElementById('dataPrepVal');
+  var changeVal = document.getElementById('changeVal');
+  var realizationVal = document.getElementById('realizationVal');
+  var liveRoi = document.getElementById('liveRoi');
+  var svg = document.getElementById('chartSvg');
+
+  var plot = { left: 50, right: 570, top: 20, bottom: 250 };
+  var yDomain = { min: -150, max: 200 };
+
+  function xForRate(r) { return plot.left + (r / 100) * (plot.right - plot.left); }
+  function yForRoi(roi) {
+    var clamped = Math.max(yDomain.min, Math.min(yDomain.max, roi));
+    var frac = (yDomain.max - clamped) / (yDomain.max - yDomain.min);
+    return plot.top + frac * (plot.bottom - plot.top);
+  }
+
+  function currentTCO() {
+    return LICENSE + CONTINGENCY + parseInt(dataPrepSlider.value, 10) + parseInt(changeSlider.value, 10);
+  }
+
+  function buildPath(tco) {
+    var d = '';
+    for (var r = 0; r <= 100; r += 2) {
+      var cs = GROSS * (r / 100);
+      var roi = roiFor(cs, tco);
+      var x = xForRate(r);
+      var y = yForRoi(roi);
+      d += (r === 0 ? 'M ' : 'L ') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    return d;
+  }
+
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) { el.setAttribute(k, attrs[k]); }
+    return el;
+  }
+
+  function renderChart() {
+    var tco = currentTCO();
+    svg.innerHTML = '';
+
+    // zero line
+    var y0 = yForRoi(0);
+    svg.appendChild(svgEl('line', { x1: plot.left, x2: plot.right, y1: y0, y2: y0, stroke: '#B7C0CB', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }));
+    var zeroLabel = svgEl('text', { x: plot.right, y: y0 - 6, 'text-anchor': 'end', 'font-size': '12', fill: '#4A5566' });
+    zeroLabel.textContent = 'breakeven';
+    svg.appendChild(zeroLabel);
+
+    // axis line
+    svg.appendChild(svgEl('line', { x1: plot.left, x2: plot.right, y1: plot.bottom, y2: plot.bottom, stroke: '#1B2430', 'stroke-width': 1.5 }));
+
+    // x labels
+    [0, 40, 70, 100].forEach(function (r) {
+      var x = xForRate(r);
+      var t = svgEl('text', { x: x, y: plot.bottom + 20, 'text-anchor': 'middle', 'font-size': '12', fill: '#4A5566' });
+      t.textContent = r + '%';
+      svg.appendChild(t);
+    });
+
+    // ROI curve
+    svg.appendChild(svgEl('path', { d: buildPath(tco), fill: 'none', stroke: '#0F5C56', 'stroke-width': 3 }));
+
+    // markers at conservative / base / optimistic
+    [
+      { r: 40, label: 'Conservative' },
+      { r: 70, label: 'Base' },
+      { r: 100, label: 'Optimistic' }
+    ].forEach(function (m) {
+      var cs = GROSS * (m.r / 100);
+      var roi = roiFor(cs, tco);
+      var x = xForRate(m.r);
+      var y = yForRoi(roi);
+      svg.appendChild(svgEl('circle', { cx: x, cy: y, r: 5, fill: roi >= 0 ? '#1F7A47' : '#A83B3B' }));
+      var lbl = svgEl('text', { x: x, y: y - 10, 'text-anchor': 'middle', 'font-size': '11', fill: '#1B2430' });
+      lbl.textContent = m.label + ' ' + roi.toFixed(0) + '%';
+      svg.appendChild(lbl);
+    });
+
+    // live marker at slider realization
+    var r = parseInt(realizationSlider.value, 10);
+    var cs = GROSS * (r / 100);
+    var roi = roiFor(cs, tco);
+    var x = xForRate(r);
+    var y = yForRoi(roi);
+    svg.appendChild(svgEl('line', { x1: x, x2: x, y1: plot.top, y2: plot.bottom, stroke: '#1D5FD1', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }));
+    svg.appendChild(svgEl('circle', { cx: x, cy: y, r: 7, fill: '#1D5FD1' }));
+
+    liveRoi.textContent = (roi >= 0 ? '+' : '\u2212') + Math.abs(roi).toFixed(1) + '%';
+    liveRoi.className = 'num ' + (roi >= 0 ? 'pos' : 'neg');
+  }
+
+  function syncLabels() {
+    dataPrepVal.textContent = money(parseInt(dataPrepSlider.value, 10));
+    changeVal.textContent = money(parseInt(changeSlider.value, 10));
+    realizationVal.textContent = realizationSlider.value + '%';
+  }
+
+  function update() {
+    syncLabels();
+    renderChart();
+  }
+
+  [dataPrepSlider, changeSlider, realizationSlider].forEach(function (el) {
+    el.addEventListener('input', update);
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
