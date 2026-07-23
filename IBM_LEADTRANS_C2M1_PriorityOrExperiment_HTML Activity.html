@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priority or experiment?</title>
+<style>
+  :root {
+    --color-bg: #f5f6f8;
+    --color-surface: #ffffff;
+    --color-border: #d7dbe1;
+    --color-border-strong: #aab1bd;
+    --color-text: #1f2430;
+    --color-muted: #565f6d;
+    --color-priority: #1c6e4a;
+    --color-priority-bg: #e7f4ed;
+    --color-experiment: #a04a00;
+    --color-experiment-bg: #fbeee0;
+    --color-accent: #2952a3;
+    --color-focus: #2952a3;
+    --color-correct: #1c6e4a;
+    --color-correct-bg: #e7f4ed;
+    --color-incorrect: #b3261e;
+    --color-incorrect-bg: #fbe9e7;
+    --color-chip-bg: #eef1f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    margin: 0 0 10px;
+  }
+
+  .subhead {
+    color: var(--color-muted);
+    margin: 0 0 20px;
+    font-size: 1rem;
+  }
+
+  p { margin: 0 0 12px; }
+
+  section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .intro-copy {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 22px;
+  }
+
+  .objectives-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .objective-item {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: var(--color-chip-bg);
+  }
+
+  .objective-item .obj-name {
+    font-weight: 600;
+  }
+
+  .objective-item .obj-kpi {
+    color: var(--color-muted);
+    font-size: 0.92rem;
+  }
+
+  .card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    background: var(--color-surface);
+  }
+
+  .card p {
+    margin: 0 0 12px;
+  }
+
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  legend {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    padding: 0;
+    margin-bottom: 6px;
+  }
+
+  .choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    background: var(--color-surface);
+  }
+
+  .choice input {
+    margin: 0;
+  }
+
+  .choice.priority-choice:has(input:checked) {
+    background: var(--color-priority-bg);
+    border-color: var(--color-priority);
+    color: var(--color-priority);
+    font-weight: 600;
+  }
+
+  .choice.experiment-choice:has(input:checked) {
+    background: var(--color-experiment-bg);
+    border-color: var(--color-experiment);
+    color: var(--color-experiment);
+    font-weight: 600;
+  }
+
+  .card-feedback {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    display: none;
+  }
+
+  .card-feedback.show { display: block; }
+
+  .card-feedback.correct {
+    background: var(--color-correct-bg);
+    color: var(--color-correct);
+    border: 1px solid var(--color-correct);
+  }
+
+  .card-feedback.incorrect {
+    background: var(--color-incorrect-bg);
+    color: var(--color-incorrect);
+    border: 1px solid var(--color-incorrect);
+  }
+
+  button.primary {
+    background: var(--color-accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  button.primary:hover { opacity: 0.92; }
+
+  #check-summary {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: none;
+  }
+
+  #check-summary.show { display: block; }
+
+  #check-summary.all-correct {
+    background: var(--color-correct-bg);
+    color: var(--color-correct);
+    border: 1px solid var(--color-correct);
+  }
+
+  #check-summary.some-wrong {
+    background: var(--color-chip-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-strong);
+  }
+
+  #check-summary.incomplete {
+    background: var(--color-chip-bg);
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+  }
+
+  .play-card {
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--color-chip-bg);
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .toggle-row:last-of-type { border-bottom: none; }
+
+  .toggle-row label {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .toggle-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  #play-readout {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    font-weight: 600;
+    min-height: 24px;
+  }
+
+  .illustrative-note {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    font-weight: 400;
+    margin-top: 6px;
+  }
+
+  .exit-note {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 0.88rem;
+    margin-top: 8px;
+  }
+
+  a, button {
+    outline-offset: 2px;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 18px 12px 44px; }
+    h1 { font-size: 1.35rem; }
+    section { padding: 14px; }
+    fieldset { flex-direction: column; gap: 8px; }
+    .choice { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Priority or experiment?</h1>
+  <p class="subhead">A five-minute sort using the test that keeps a strategy from turning into a pile of pilots.</p>
+
+  <div class="intro-copy">
+    <p>When a company decides to "use AI," ideas show up from everywhere: a vendor's pitch, an executive's favorite demo, a team's own good instinct. Not all of them deserve funding. A real <strong>AI priority</strong> is an idea that ties back to a business objective the company is already committed to, and to a specific number &mdash; a <strong>KPI</strong>, short for key performance indicator &mdash; that tells you whether it's working. An <strong>experiment</strong> is everything else: a good idea that hasn't been tied to a goal or a number yet.</p>
+    <p>Below are three objectives this business has already committed to, and six ideas someone has proposed. Sort each idea into <strong>Priority</strong> or <strong>Experiment</strong> using one test: does it name a KPI that belongs to one of these three objectives, or not?</p>
+  </div>
+
+  <section aria-labelledby="objectives-heading">
+    <h2 id="objectives-heading">The three objectives already on the table</h2>
+    <ul class="objectives-list">
+      <li class="objective-item">
+        <div class="obj-name">Cut customer response time</div>
+        <div class="obj-kpi">KPI: average response time per customer ticket</div>
+      </li>
+      <li class="objective-item">
+        <div class="obj-name">Reduce manual reconciliation effort</div>
+        <div class="obj-kpi">KPI: hours spent reconciling accounts each month</div>
+      </li>
+      <li class="objective-item">
+        <div class="obj-name">Increase renewal rate</div>
+        <div class="obj-kpi">KPI: percentage of customers who renew</div>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="sort-heading">
+    <h2 id="sort-heading">Sort the six ideas</h2>
+    <p>For each idea, choose where it belongs. Then check your sort.</p>
+
+    <div id="cards-container"></div>
+
+    <button type="button" class="primary" id="check-btn">Check my sort</button>
+    <div id="check-summary" role="status" aria-live="polite"></div>
+  </section>
+
+  <section aria-labelledby="play-heading">
+    <h2 id="play-heading">Now play: move one lever</h2>
+    <p>Here's one more idea. Flip the switches below and watch the read change &mdash; there's no scoring here, just cause and effect on the same test you just used.</p>
+
+    <div class="play-card">
+      <p><strong>Idea:</strong> "A regional manager wants to use AI to summarize weekly sales call notes."</p>
+
+      <div class="toggle-row">
+        <input type="checkbox" id="toggle-a" aria-describedby="play-readout">
+        <label for="toggle-a">Tied to one of the three stated objectives above?</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="toggle-b" aria-describedby="play-readout">
+        <label for="toggle-b">Has a specific KPI attached?</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="toggle-c" aria-describedby="play-readout">
+        <label for="toggle-c">Justified mainly because it's new and exciting?</label>
+      </div>
+
+      <div id="play-readout" role="status" aria-live="polite">Flip a switch above to see how the read changes.</div>
+      <p class="illustrative-note">Illustrative scenario &mdash; explore freely, nothing here is graded.</p>
+    </div>
+  </section>
+
+  <p class="exit-note">That's the whole exercise. Close this tab whenever you're ready &mdash; there's nothing to submit.</p>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var candidates = [
+    {
+      id: "c1",
+      text: "Give customer-service reps an AI assistant that drafts first-reply messages, so average response time per ticket drops.",
+      correct: "priority",
+      tieNote: "average response time per ticket, tied to “Cut customer response time.”"
+    },
+    {
+      id: "c2",
+      text: "Add a generative-AI writing tool everywhere in the company to see what sticks.",
+      correct: "experiment",
+      reason: "it isn't tied to any of the three objectives or a KPI — it's justified only by rolling AI out broadly to see what happens."
+    },
+    {
+      id: "c3",
+      text: "Have AI match transactions automatically during the monthly close, cutting the hours spent reconciling accounts.",
+      correct: "priority",
+      tieNote: "hours spent reconciling accounts, tied to “Reduce manual reconciliation effort.”"
+    },
+    {
+      id: "c4",
+      text: "Adopt an AI vendor's platform because the vendor says it is the whole strategy.",
+      correct: "experiment",
+      reason: "it's justified by a vendor's pitch, not by a named objective or KPI."
+    },
+    {
+      id: "c5",
+      text: "Build a model that flags at-risk accounts early, so the team can step in before customers fail to renew.",
+      correct: "priority",
+      tieNote: "percentage of customers who renew, tied to “Increase renewal rate.”"
+    },
+    {
+      id: "c6",
+      text: "Fund the AI chatbot project an executive saw demoed at a conference last month.",
+      correct: "experiment",
+      reason: "it's justified by where the idea came from, not by a named objective or KPI."
+    }
+  ];
+
+  var container = document.getElementById("cards-container");
+
+  candidates.forEach(function (c, index) {
+    var card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", "Idea " + (index + 1));
+
+    var p = document.createElement("p");
+    p.textContent = c.text;
+    card.appendChild(p);
+
+    var fieldset = document.createElement("fieldset");
+
+    var legend = document.createElement("legend");
+    legend.textContent = "Where does this idea belong?";
+    fieldset.appendChild(legend);
+
+    var priorityLabel = document.createElement("label");
+    priorityLabel.className = "choice priority-choice";
+    var priorityInput = document.createElement("input");
+    priorityInput.type = "radio";
+    priorityInput.name = c.id;
+    priorityInput.value = "priority";
+    priorityLabel.appendChild(priorityInput);
+    priorityLabel.appendChild(document.createTextNode("Priority"));
+    fieldset.appendChild(priorityLabel);
+
+    var experimentLabel = document.createElement("label");
+    experimentLabel.className = "choice experiment-choice";
+    var experimentInput = document.createElement("input");
+    experimentInput.type = "radio";
+    experimentInput.name = c.id;
+    experimentInput.value = "experiment";
+    experimentLabel.appendChild(experimentInput);
+    experimentLabel.appendChild(document.createTextNode("Experiment"));
+    fieldset.appendChild(experimentLabel);
+
+    card.appendChild(fieldset);
+
+    var feedback = document.createElement("div");
+    feedback.className = "card-feedback";
+    feedback.id = c.id + "-feedback";
+    feedback.setAttribute("role", "status");
+    card.appendChild(feedback);
+
+    container.appendChild(card);
+  });
+
+  var checkBtn = document.getElementById("check-btn");
+  var summary = document.getElementById("check-summary");
+
+  checkBtn.addEventListener("click", function () {
+    var allAnswered = true;
+    var correctCount = 0;
+
+    candidates.forEach(function (c) {
+      var selected = document.querySelector('input[name="' + c.id + '"]:checked');
+      var feedback = document.getElementById(c.id + "-feedback");
+
+      if (!selected) {
+        allAnswered = false;
+        feedback.className = "card-feedback";
+        feedback.classList.remove("show");
+        return;
+      }
+
+      var isCorrect = selected.value === c.correct;
+      if (isCorrect) correctCount++;
+
+      feedback.classList.add("show");
+
+      if (isCorrect) {
+        feedback.className = "card-feedback show correct";
+        if (c.correct === "priority") {
+          feedback.textContent = "Correct — this ties to " + c.tieNote;
+        } else {
+          feedback.textContent = "Correct — " + c.reason;
+        }
+      } else {
+        feedback.className = "card-feedback show incorrect";
+        if (c.correct === "priority") {
+          feedback.textContent = "Not quite — this belongs in Priority. It names a KPI: " + c.tieNote;
+        } else {
+          feedback.textContent = "Not quite — this belongs in Experiment, because " + c.reason;
+        }
+      }
+    });
+
+    summary.classList.remove("all-correct", "some-wrong", "incomplete");
+    summary.classList.add("show");
+
+    if (!allAnswered) {
+      summary.classList.add("incomplete");
+      summary.textContent = "Place all six ideas before checking — " + (6 - candidates.filter(function (c) {
+        return document.querySelector('input[name="' + c.id + '"]:checked');
+      }).length) + " left to sort.";
+      return;
+    }
+
+    if (correctCount === 6) {
+      summary.classList.add("all-correct");
+      summary.textContent = "All six sorted correctly. You applied the north-star test: keep what's tied to an objective and a KPI, park what isn't.";
+    } else {
+      summary.classList.add("some-wrong");
+      summary.textContent = correctCount + " of 6 correct. Check the notes under each idea, then adjust and check again.";
+    }
+  });
+
+  var toggleA = document.getElementById("toggle-a");
+  var toggleB = document.getElementById("toggle-b");
+  var toggleC = document.getElementById("toggle-c");
+  var readout = document.getElementById("play-readout");
+
+  function updateReadout() {
+    var a = toggleA.checked;
+    var b = toggleB.checked;
+    var c = toggleC.checked;
+
+    if (a && b) {
+      readout.textContent = "Reads like a priority. It's anchored to a business objective and a number you can track.";
+    } else if (a && !b) {
+      readout.textContent = "Borderline. It points at the right objective, but without a KPI attached, no one can tell if it's working — name the metric before going further.";
+    } else if (!a && b) {
+      readout.textContent = "Unusual case. A KPI exists, but it isn't linked to a stated objective yet — worth asking whether that KPI actually matters to the business.";
+    } else if (!a && !b && c) {
+      readout.textContent = "Reads like a scattered experiment. Nothing here ties it to an objective the business has already committed to.";
+    } else {
+      readout.textContent = "Reads like a scattered experiment for now — nothing here ties it to an objective or a KPI yet.";
+    }
+  }
+
+  toggleA.addEventListener("change", updateReadout);
+  toggleB.addEventListener("change", updateReadout);
+  toggleC.addEventListener("change", updateReadout);
+})();
+</script>
+
+</body>
+</html>
