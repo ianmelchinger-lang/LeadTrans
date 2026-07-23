@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sort the Signals</title>
+<style>
+  :root{
+    --ink:#1b2733;
+    --ink-soft:#41505f;
+    --paper:#f6f4ef;
+    --card:#ffffff;
+    --line:#d9d3c7;
+    --surface:#5b6b7a;      /* dashboard / access signal */
+    --surface-bg:#eef0f2;
+    --real:#1f7a6d;         /* behavioral / real signal */
+    --real-bg:#e4f1ee;
+    --amber:#a76a12;
+    --amber-bg:#f7edda;
+    --good:#1f7a3f;
+    --good-bg:#e5f2e8;
+    --miss:#a1362c;
+    --miss-bg:#f7e7e4;
+    --focus:#0b5c9c;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    font-size:17px;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px;}
+  h1{font-size:1.6rem;line-height:1.2;margin:0 0 6px;letter-spacing:-0.01em;}
+  h2{font-size:1.18rem;margin:0 0 4px;letter-spacing:-0.005em;}
+  .eyebrow{
+    font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--ink-soft);margin:0 0 10px;
+  }
+  .lede{color:var(--ink-soft);margin:0 0 4px;}
+  p{margin:0 0 12px;}
+  .num{font-variant-numeric:tabular-nums;}
+  section{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:22px 20px;margin:20px 0;
+  }
+  .step-tag{
+    display:inline-block;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;
+    text-transform:uppercase;color:var(--real);margin:0 0 8px;
+  }
+  .terms{
+    background:var(--paper);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;margin:16px 0 4px;font-size:0.95rem;
+  }
+  .terms dt{font-weight:700;margin-top:8px;}
+  .terms dt:first-child{margin-top:0;}
+  .terms dd{margin:2px 0 0;color:var(--ink-soft);}
+
+  /* scenario */
+  .scenario{background:var(--paper);border-left:4px solid var(--surface);border-radius:8px;padding:14px 16px;margin:6px 0 0;}
+  .scenario .tiny{font-size:0.8rem;color:var(--ink-soft);margin:0 0 6px;font-style:italic;}
+
+  /* sorting items */
+  .item{
+    border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;margin:12px 0;
+    background:var(--card);
+  }
+  .item.correct{border-color:var(--good);background:var(--good-bg);}
+  .item.wrong{border-color:var(--miss);background:var(--miss-bg);}
+  .item p.obs{margin:0 0 10px;font-weight:500;}
+  fieldset{border:0;margin:0;padding:0;}
+  legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+  .choices{display:flex;gap:8px;flex-wrap:wrap;}
+  .choices label{
+    flex:1 1 140px;min-width:130px;cursor:pointer;
+    border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;
+    font-size:0.9rem;font-weight:600;text-align:center;color:var(--ink-soft);
+    background:var(--card);display:block;
+  }
+  .choices input{position:absolute;opacity:0;width:1px;height:1px;}
+  .choices label.pick-surface{}
+  .choices input:checked + label.pick-surface{background:var(--surface-bg);border-color:var(--surface);color:var(--surface);}
+  .choices input:checked + label.pick-real{background:var(--real-bg);border-color:var(--real);color:var(--real);}
+  .choices input:focus-visible + label{outline:3px solid var(--focus);outline-offset:2px;}
+  .why{margin:10px 0 0;font-size:0.9rem;padding:8px 10px;border-radius:6px;display:none;}
+  .item.correct .why{display:block;background:#ffffff;color:var(--good);border:1px solid var(--good);}
+  .item.wrong .why{display:block;background:#ffffff;color:var(--miss);border:1px solid var(--miss);}
+
+  button.check{
+    background:var(--ink);color:#fff;border:0;border-radius:8px;
+    padding:12px 20px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:6px;
+  }
+  button.check:hover{background:#0f1a24;}
+  button.check:focus-visible{outline:3px solid var(--focus);outline-offset:3px;}
+  .feedback{margin-top:16px;padding:14px 16px;border-radius:10px;display:none;font-size:0.97rem;}
+  .feedback.show{display:block;}
+  .feedback.good{background:var(--good-bg);border:1px solid var(--good);color:var(--good);}
+  .feedback.partial{background:var(--amber-bg);border:1px solid var(--amber);color:var(--amber);}
+  .feedback strong{color:inherit;}
+  .feedback ul{margin:8px 0 0;padding-left:20px;}
+  .feedback li{margin:4px 0;}
+
+  /* signal reader */
+  .signal-row{margin:14px 0;}
+  .signal-row .label{font-weight:600;margin:0 0 2px;}
+  .signal-row .hint{font-size:0.85rem;color:var(--ink-soft);margin:0 0 8px;}
+  .seg{display:flex;gap:6px;}
+  .seg label{
+    flex:1;cursor:pointer;text-align:center;border:1.5px solid var(--line);
+    border-radius:7px;padding:8px 6px;font-size:0.88rem;font-weight:600;color:var(--ink-soft);background:var(--card);
+  }
+  .seg input{position:absolute;opacity:0;width:1px;height:1px;}
+  .seg input:checked + label{background:var(--real-bg);border-color:var(--real);color:var(--real);}
+  .seg input:focus-visible + label{outline:3px solid var(--focus);outline-offset:2px;}
+  .toggle{display:flex;align-items:flex-start;gap:10px;margin:18px 0 6px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);border-radius:9px;}
+  .toggle input{width:20px;height:20px;margin-top:2px;flex:0 0 auto;}
+  .toggle label{font-weight:500;font-size:0.95rem;}
+  .read{
+    margin-top:18px;padding:16px 18px;border-radius:10px;border:1px solid var(--line);
+    background:var(--paper);
+  }
+  .read .kicker{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 6px;color:var(--ink-soft);}
+  .read .band{font-weight:700;font-size:1.05rem;margin:0 0 6px;}
+  .read.high{border-color:var(--real);background:var(--real-bg);}
+  .read.high .band{color:var(--real);}
+  .read.mixed{border-color:var(--amber);background:var(--amber-bg);}
+  .read.mixed .band{color:var(--amber);}
+  .read.low{border-color:var(--miss);background:var(--miss-bg);}
+  .read.low .band{color:var(--miss);}
+  .read .pause{margin-top:10px;padding:10px 12px;background:#fff;border:1px dashed var(--ink-soft);border-radius:7px;font-size:0.93rem;}
+  .lens-note{font-size:0.82rem;color:var(--ink-soft);margin:10px 0 0;font-style:italic;}
+  .foot{font-size:0.82rem;color:var(--ink-soft);margin-top:26px;border-top:1px solid var(--line);padding-top:14px;}
+
+  @media (max-width:480px){
+    body{font-size:16px;}
+    .wrap{padding:24px 15px 52px;}
+    .choices label{flex:1 1 100%;}
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .item,.feedback,.read,.choices label,.seg label{transition:background .18s ease,border-color .18s ease,color .18s ease;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Sort the Signals</h1>
+
+  <section aria-labelledby="task-h">
+    <h2 id="task-h">One team, three weeks in</h2>
+    <div class="scenario">
+      <p style="margin:0 0 12px;">A customer-support team was given an AI assistant to draft case summaries and replies. It's now week&nbsp;three. Their manager wants to report whether the rollout is working. Here is everything they've observed. Sort each observation into the bucket it belongs to.</p>
+      <p style="margin:0;"><strong>Surface signal:</strong> A count from a system that proves access or a polite answer &mdash; not that work changed.<br>
+      <strong>Real signal:</strong> Something people do (or don't do) around the tool that reveals genuine engagement: asking specific questions, admitting a mistake, trying something new, or giving honest feedback about what isn't working.</p>
+    </div>
+
+    <div id="items"></div>
+
+    <button class="check" id="checkBtn" type="button">Check my read</button>
+    <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+  </section>
+
+  <p class="foot">
+    Close the tab whenever you're done &mdash; nothing here is saved or reported.
+  </p>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var items = [
+    {id:1, obs:"Licenses were activated by 96% of the team in the first week.", cat:"surface",
+      why:"A count of who can log in. That's access, not adoption."},
+    {id:2, obs:"Every team member finished the required AI training.", cat:"surface",
+      why:"Completion is compliance. It says nothing about whether the training reached the work."},
+    {id:3, obs:"The rollout satisfaction survey scored 4.4 out of 5.", cat:"surface",
+      why:"A high score paired with low use usually measures politeness, not real experience."},
+    {id:4, obs:"In the launch meeting, no one asked a single question about how the tool handles their cases.", cat:"real",
+      why:"Question rate is a behavior. Silence here is a real signal \u2014 often self-protection, not understanding."},
+    {id:5, obs:"An analyst quietly showed a colleague a workaround she built to avoid the tool.", cat:"real",
+      why:"Working around the tool is real behavior \u2014 and a warning the dashboard can't see."},
+    {id:6, obs:"A senior rep flagged that the tool's summaries drop the exception notes his cases depend on.", cat:"real",
+      why:"Honest upward feedback about a specific workflow gap. A real signal \u2014 and possibly a legitimate concern."},
+    {id:7, obs:"Two people tried the tool on a task no one had suggested, then shared what worked.", cat:"real",
+      why:"Experimentation is a real signal that people are genuinely engaging with the tool."},
+    {id:8, obs:"Asked how it's going, most people said \u201cfine\u201d and changed the subject.", cat:"real",
+      why:"\u201cFine\u201d and a subject change is low upward feedback \u2014 a behavior, not consent."}
+  ];
+
+  var catName = {surface:"Surface signal", real:"Real signal"};
+  var container = document.getElementById("items");
+
+  items.forEach(function(it){
+    var wrap = document.createElement("div");
+    wrap.className = "item";
+    wrap.setAttribute("data-id", it.id);
+
+    var fs = document.createElement("fieldset");
+    var lg = document.createElement("legend");
+    lg.textContent = "Observation " + it.id;
+    fs.appendChild(lg);
+
+    var p = document.createElement("p");
+    p.className = "obs";
+    p.textContent = it.obs;
+    fs.appendChild(p);
+
+    var choices = document.createElement("div");
+    choices.className = "choices";
+
+    [["surface","Surface signal","pick-surface"],["real","Real signal","pick-real"]].forEach(function(c){
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "obs" + it.id;
+      input.id = "obs" + it.id + "_" + c[0];
+      input.value = c[0];
+      var label = document.createElement("label");
+      label.setAttribute("for", input.id);
+      label.className = c[2];
+      label.textContent = c[1];
+      choices.appendChild(input);
+      choices.appendChild(label);
+    });
+    fs.appendChild(choices);
+
+    var why = document.createElement("p");
+    why.className = "why";
+    fs.appendChild(why);
+
+    wrap.appendChild(fs);
+    container.appendChild(wrap);
+  });
+
+  document.getElementById("checkBtn").addEventListener("click", function(){
+    var wrong = [];
+    var answered = 0;
+    items.forEach(function(it){
+      var picked = document.querySelector('input[name="obs'+it.id+'"]:checked');
+      var row = document.querySelector('.item[data-id="'+it.id+'"]');
+      var whyEl = row.querySelector(".why");
+      row.classList.remove("correct","wrong");
+      if(!picked){ return; }
+      answered++;
+      if(picked.value === it.cat){
+        row.classList.add("correct");
+        whyEl.textContent = "Correct \u2014 " + it.why;
+      } else {
+        row.classList.add("wrong");
+        whyEl.textContent = "This one belongs in \u201c" + catName[it.cat] + ".\u201d " + it.why;
+        wrong.push(it);
+      }
+    });
+
+    var fb = document.getElementById("feedback");
+    fb.className = "feedback show";
+
+    if(answered < items.length){
+      fb.classList.add("partial");
+      fb.innerHTML = "<strong>Sort all "+items.length+" observations first.</strong> Pick a bucket for every line, then check again.";
+      return;
+    }
+
+    if(wrong.length === 0){
+      fb.classList.add("good");
+      fb.innerHTML = "<strong>You separated the dashboard from the room.</strong> The three counts \u2014 activation, training, survey \u2014 only prove access. The five behaviors are what tell you whether the work actually changed. That gap between the two is the whole problem: a rollout can be all green on the surface and quietly stalled underneath.";
+    } else {
+      fb.classList.add("partial");
+      var html = "<strong>Close \u2014 "+(items.length-wrong.length)+" of "+items.length+" placed as intended.</strong> The distinguishing test: is it a <em>count from a system</em> (surface) or <em>something a person did</em> (real)? These are in the wrong bucket:<ul>";
+      wrong.forEach(function(it){
+        html += "<li>\u201c"+it.obs+"\u201d \u2014 belongs in <strong>"+catName[it.cat]+"</strong>.</li>";
+      });
+      html += "</ul>Adjust those and check again.";
+      fb.innerHTML = html;
+    }
+  });
+})();
+</script>
+</body>
+</html>
